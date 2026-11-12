@@ -1,0 +1,9 @@
+# Compilación .NET
+bin/
+obj/
+publish/
+*.user
+*.suo
+.vs/
+.vscode/
+*.log
