@@ -81,7 +81,7 @@ public partial class MainWindow : Window
         Loaded += (_, _) => Iniciar();
         PreviewKeyDown += AlPresionarTecla;
 
-        // Con la sesión bloqueada (p. ej. Leo usando su cuenta) no se leen sensores.
+        // Con la sesión bloqueada (p. ej. el administrador usando su cuenta) no se leen sensores.
         Microsoft.Win32.SystemEvents.SessionSwitch += (_, e) => Dispatcher.BeginInvoke(() =>
         {
             if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionLock) _timerSensores.Stop();

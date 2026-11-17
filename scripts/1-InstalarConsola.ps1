@@ -1,6 +1,6 @@
 ﻿#Requires -RunAsAdministrator
 <#
-  PASO 1 - Ejecutar desde TU cuenta (Leo), como administrador.
+  PASO 1 - Ejecutar desde TU cuenta (administrador), como administrador.
 
   - Copia ConsolaShell a C:\ConsolaShell
   - Crea el perfil local "Consola" (usuario estándar, sin contraseña)

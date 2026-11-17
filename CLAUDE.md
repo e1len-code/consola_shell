@@ -1,13 +1,13 @@
 # ConsolaShell
 
-Shell de "modo consola" para Windows 11: el PC enciende, inicia sesión solo en un perfil local **Consola** (sin contraseña), muestra una pantalla de carga propia y abre **Steam Big Picture**. Todo se maneja con un mando Xbox. Proyecto personal de Leo; el código y los textos de interfaz están en español.
+Shell de "modo consola" para Windows 11: el PC enciende, inicia sesión solo en un perfil local **Consola** (sin contraseña), muestra una pantalla de carga propia y abre **Steam Big Picture**. Todo se maneja con un mando Xbox. Proyecto personal; el código y los textos de interfaz están en español.
 
-## Decisiones tomadas (no reabrir sin que Leo lo pida)
+## Decisiones tomadas (no reabrir sin que el dueño lo pida)
 
 - **Windows 11 + Steam Big Picture**, no SteamOS ni Bazzite: el PC tiene una RTX 4070 Super y SteamOS aún no soporta NVIDIA oficialmente.
 - **Xbox mode de Windows 11 descartado**: su "app de inicio" solo admite la app de Xbox, no Steam.
 - **App de escritorio WPF (C#)**, no app de consola (mostraría una ventana negra de comandos).
-- **Shell reemplazado solo para el perfil Consola**, vía `HKCU\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Shell`. La cuenta personal de Leo no se toca y sigue con contraseña. Shell Launcher de Microsoft no aplica (requiere Enterprise/Education).
+- **Shell reemplazado solo para el perfil Consola**, vía `HKCU\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Shell`. La cuenta personal del administrador no se toca y sigue con contraseña. Shell Launcher de Microsoft no aplica (requiere Enterprise/Education).
 - **Perfil Consola = usuario estándar**, sin contraseña ni permisos de administrador.
 - **Fuera de alcance**: explorador de archivos, instalador de juegos, "modo cursor" (mando como mouse). Se evaluaron y se descartaron por ahora; para instalar juegos se usa la cuenta personal o las herramientas de Steam.
 - Pantalla de inicio: un solo perfil, sin clave con el mando (por ahora).
@@ -40,7 +40,7 @@ Encendido → autologin "Consola" → ConsolaShell (capa "Cargando…") → Stea
 `Cargando` → `EnSteam` (capa oculta) · `Menu` (Centro de control) · `Escritorio` (mantenimiento, vigilancia en pausa) · `Ocupado` (reiniciando Steam / apagando).
 
 ### Comportamientos clave
-- Big Picture se detecta por título de ventana (`TitulosBigPicture`, contiene "Big Picture") en procesos `steam`/`steamwebhelper` **de la misma sesión** (puede haber otro Steam abierto en la sesión de Leo).
+- Big Picture se detecta por título de ventana (`TitulosBigPicture`, contiene "Big Picture") en procesos `steam`/`steamwebhelper` **de la misma sesión** (puede haber otro Steam abierto en la sesión del administrador).
 - En `Cargando` se exige ventana visible ≥1,5 s; en `EnSteam` solo que exista (durante un juego puede estar oculta).
 - Steam cerrado → "Reiniciando Steam…". Sin ventana de Big Picture ≥`SegundosSinBigPictureParaPanel` (3 s) → Centro de control; "Volver a Steam" lo reabre con `steam://open/bigpicture`.
 - Centro de control también con **Vista + Menú** N segundos. XInput funciona sin foco, así que responde incluso con Steam en primer plano. ◀ ▶ ajustan la opción seleccionada (volumen).
@@ -58,7 +58,7 @@ dotnet build
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 ```
 
-Desde la cuenta de Leo, `publish\ConsolaShell.exe` abre el panel de administración. Para probar el shell: botón *Probar modo consola aquí* (o `ConsolaShell.exe --shell`). Para salir: Vista + Menú → *Modo escritorio* y cerrar el proceso desde el Administrador de tareas.
+Desde la cuenta administradora, `publish\ConsolaShell.exe` abre el panel de administración. Para probar el shell: botón *Probar modo consola aquí* (o `ConsolaShell.exe --shell`). Para salir: Vista + Menú → *Modo escritorio* y cerrar el proceso desde el Administrador de tareas.
 
 No hay pruebas automatizadas; la verificación es manual (carga → Big Picture → fundido, Centro de control con Vista + Menú, volumen ◀ ▶, gráficas, batería, cerrar Steam, salir de Big Picture).
 
@@ -69,17 +69,17 @@ No hay pruebas automatizadas; la verificación es manual (carga → Big Picture 
 - Nada debe lanzar excepciones hacia fuera en el shell: registrar con `Log.Escribir` y seguir funcionando.
 - Scripts `.ps1`: UTF-8 **con BOM** (PowerShell 5.1 lee mal las tildes sin BOM) y finales de línea CRLF. Usar SIDs para grupos locales (`S-1-5-32-545` = Usuarios), no nombres, porque Windows está en español.
 - No hacer cambios que exijan permisos de administrador dentro del perfil Consola.
-- Optimizaciones de RAM/rendimiento **solo en el perfil Consola** (HKCU de Consola), nunca en la cuenta de Leo ni a nivel de sistema (HKLM, servicios, políticas). `2-ActivarModoConsola.ps1` se niega a correr fuera de Consola o en una cuenta administradora; cada ajuste nuevo debe tener su reversión en `3-RevertirConsola.ps1`.
+- Optimizaciones de RAM/rendimiento **solo en el perfil Consola** (HKCU de Consola), nunca en la cuenta del administrador ni a nivel de sistema (HKLM, servicios, políticas). `2-ActivarModoConsola.ps1` se niega a correr fuera de Consola o en una cuenta administradora; cada ajuste nuevo debe tener su reversión en `3-RevertirConsola.ps1`.
 
 ## Cuidado al tocar el sistema
 
-- Nunca ejecutar los scripts de `scripts/` ni modificar el registro, el autologin o el shell sin que Leo lo pida explícitamente: cambian cómo arranca su PC.
+- Nunca ejecutar los scripts de `scripts/` ni modificar el registro, el autologin o el shell sin que el dueño lo pida explícitamente: cambian cómo arranca su PC.
 - Recuperación si queda pantalla negra: `Ctrl+Alt+Supr` → Administrador de tareas → Ejecutar `explorer.exe`.
-- Reversión: panel → *Desactivar modo consola*, o `scripts\3-RevertirConsola.cmd` como administrador desde la cuenta de Leo.
+- Reversión: panel → *Desactivar modo consola*, o `scripts\3-RevertirConsola.cmd` como administrador desde la cuenta administradora.
 - El nombre del perfil ya no es fijo: se lee de `NombreUsuario` en `config.json` (`Get-UsuarioConsola`). El shell instalado se registra como `"C:\ConsolaShell\ConsolaShell.exe" --shell`.
 - Todo script que modifique o borre una cuenta debe rechazar la cuenta actual y las del grupo Administradores (`Test-EsAdministrador`).
 
-## Ideas pendientes (solo si Leo las pide)
+## Ideas pendientes (solo si el dueño las pide)
 
 - Clave de acceso con secuencia de botones del mando.
 - Pantalla "¿Quién juega?" con varios perfiles.

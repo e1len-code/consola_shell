@@ -3,7 +3,7 @@
   Se carga al inicio de cada script con:  . "$PSScriptRoot\Comun.ps1"
 
   Regla: todo lo que el modo consola cambia vive en el registro del PERFIL DE CONSOLA (su HKCU).
-  Nada de aquí toca la cuenta de Leo ni otros perfiles.
+  Nada de aquí toca la cuenta del administrador ni otros perfiles.
 #>
 
 # Salida en UTF-8 para que el panel de administración muestre bien las tildes.

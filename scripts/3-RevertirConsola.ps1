@@ -1,6 +1,6 @@
 ﻿#Requires -RunAsAdministrator
 <#
-  REVERTIR - Ejecutar desde TU cuenta (Leo), como administrador.
+  REVERTIR - Ejecutar desde TU cuenta (administrador), como administrador.
 
   Por defecto: desactiva el inicio automático y quita el shell del perfil Consola.
   Opcional:
