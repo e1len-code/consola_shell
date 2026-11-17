@@ -52,19 +52,39 @@
                        Margin="0,32,0,0" HorizontalAlignment="Center" />
         </StackPanel>
 
-        <!-- Menú de emergencia -->
-        <Border x:Name="PanelMenu" Visibility="Collapsed"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="480" Padding="40,32" CornerRadius="16"
-                Background="#E60B111B" BorderBrush="#334FC3F7" BorderThickness="1">
-            <StackPanel>
-                <TextBlock x:Name="TituloMenu" Text="Menú" FontSize="32" Foreground="White" Margin="0,0,0,8" />
-                <TextBlock x:Name="DetalleMenu" FontSize="18" Foreground="#FF8A80"
-                           TextWrapping="Wrap" MaxWidth="560" Margin="0,0,0,16" Visibility="Collapsed" />
-                <StackPanel x:Name="ListaMenu" Margin="0,8,0,0" />
-                <TextBlock Text="Ⓐ Seleccionar     Ⓑ Volver" FontSize="16" Foreground="#7F8DA3" Margin="0,24,0,0" />
+        <!-- Centro de control: menú + estado del PC + mandos.
+             Viewbox DownOnly: en pantallas pequeñas se reduce, en 1080p/4K queda a tamaño real. -->
+        <Viewbox x:Name="PanelMenu" Visibility="Collapsed" StretchDirection="DownOnly" Margin="40,100,40,90">
+            <StackPanel Orientation="Horizontal">
+                <Border MinWidth="440" Padding="36,28" CornerRadius="16" VerticalAlignment="Top"
+                        Background="#E60B111B" BorderBrush="#334FC3F7" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock x:Name="TituloMenu" Text="Centro de control" FontSize="32" Foreground="White" Margin="0,0,0,8" />
+                        <TextBlock x:Name="DetalleMenu" FontSize="18" Foreground="#FF8A80"
+                                   TextWrapping="Wrap" MaxWidth="440" Margin="0,0,0,16" Visibility="Collapsed" />
+                        <StackPanel x:Name="ListaMenu" Margin="0,8,0,0" />
+                        <TextBlock Text="Ⓐ Seleccionar     ◀ ▶ Ajustar     Ⓑ Volver" FontSize="16" Foreground="#7F8DA3" Margin="0,24,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Margin="28,0,0,0" Padding="22,24" CornerRadius="16" VerticalAlignment="Top"
+                        Background="#E60B111B" BorderBrush="#334FC3F7" BorderThickness="1">
+                    <StackPanel Width="616">
+                        <TextBlock Text="Estado del PC" FontSize="24" Foreground="White" Margin="6,0,0,2" />
+                        <TextBlock x:Name="TextoHardware" FontSize="15" Foreground="#7F8DA3" Margin="6,0,0,10"
+                                   TextTrimming="CharacterEllipsis" />
+                        <WrapPanel x:Name="PanelGraficas" />
+                        <TextBlock x:Name="TextoMemoria" FontSize="17" Foreground="#B8C4D6" Margin="6,10,0,0" />
+
+                        <TextBlock Text="Qué usa la RAM" FontSize="24" Foreground="White" Margin="6,26,0,8" />
+                        <StackPanel x:Name="PanelProcesos" Margin="6,0,6,0" />
+
+                        <TextBlock Text="Mandos" FontSize="24" Foreground="White" Margin="6,26,0,10" />
+                        <StackPanel x:Name="PanelMandos" Margin="6,0,0,0" />
+                    </StackPanel>
+                </Border>
             </StackPanel>
-        </Border>
+        </Viewbox>
 
         <!-- Ayuda inferior -->
         <TextBlock x:Name="Ayuda"

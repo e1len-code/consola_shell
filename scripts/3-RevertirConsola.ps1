@@ -8,12 +8,21 @@
     -EliminarArchivos  borra C:\ConsolaShell
 #>
 param(
-    [string]$Usuario = "Consola",
+    [string]$Usuario = "",
     [switch]$EliminarUsuario,
     [switch]$EliminarArchivos
 )
 
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot\Comun.ps1"
+if (-not $Usuario) { $Usuario = Get-UsuarioConsola }
+
+# Protección: nunca revertir ni borrar tu cuenta ni una cuenta administradora.
+if ($Usuario -eq $env:USERNAME) { throw "'$Usuario' es la cuenta actual; este script solo actúa sobre el perfil de consola. No se cambió nada." }
+$previa = Get-LocalUser -Name $Usuario -ErrorAction SilentlyContinue
+if ($previa -and (Test-EsAdministrador $previa.SID.Value)) {
+    throw "'$Usuario' pertenece a Administradores; este script no modifica cuentas administradoras. No se cambió nada."
+}
 
 Write-Host ""
 Write-Host "== Desactivando inicio de sesión automático" -ForegroundColor Cyan
@@ -46,9 +55,9 @@ if ($cuenta) {
 
     if ($raiz) {
         try {
-            Remove-ItemProperty -Path "$raiz\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" `
-                -Name Shell -ErrorAction SilentlyContinue
-            Write-Host "   Shell eliminado: Consola volverá a tener escritorio normal."
+            # Quita el shell, las notificaciones desactivadas y los ajustes de RAM (ver Comun.ps1)
+            Remove-ModoConsola $raiz
+            Write-Host "   Modo consola quitado: '$Usuario' volverá a tener escritorio normal y ajustes de Windows por defecto."
         } finally {
             if ($cargadoPorScript) {
                 [gc]::Collect()

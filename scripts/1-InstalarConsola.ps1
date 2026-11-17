@@ -8,14 +8,24 @@
   - Quita la animación de primer inicio
 
   Tu cuenta actual NO cambia: sigue con su contraseña.
+  Si ya estaba instalado, actualiza los archivos y conserva el config.json instalado.
 #>
 param(
-    [string]$Usuario = "Consola",
+    [string]$Usuario = "",
     [string]$Origen  = (Join-Path $PSScriptRoot "..\publish"),
     [string]$Destino = "C:\ConsolaShell"
 )
 
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot\Comun.ps1"
+if (-not $Usuario) { $Usuario = Get-UsuarioConsola $Destino }
+
+# Protección: el perfil de consola nunca puede ser tu cuenta ni una cuenta administradora.
+if ($Usuario -eq $env:USERNAME) { throw "'$Usuario' es la cuenta actual; el perfil de consola debe ser otro. No se cambió nada." }
+$existente = Get-LocalUser -Name $Usuario -ErrorAction SilentlyContinue
+if ($existente -and (Test-EsAdministrador $existente.SID.Value)) {
+    throw "'$Usuario' pertenece a Administradores; el perfil de consola debe ser un usuario estándar. No se cambió nada."
+}
 
 Write-Host ""
 Write-Host "== 1/4  Copiando ConsolaShell a $Destino" -ForegroundColor Cyan
@@ -23,7 +33,15 @@ if (-not (Test-Path (Join-Path $Origen "ConsolaShell.exe"))) {
     throw "No se encontró ConsolaShell.exe en '$Origen'. Primero compila con 'dotnet publish' (ver README)."
 }
 New-Item -ItemType Directory -Force -Path $Destino | Out-Null
-Copy-Item -Path (Join-Path $Origen "*") -Destination $Destino -Recurse -Force
+# Se copia todo menos config.json; ese solo se copia si aún no existe (conserva nombre y ajustes).
+Get-ChildItem -Path $Origen | Where-Object { $_.Name -ne "config.json" } |
+    Copy-Item -Destination $Destino -Recurse -Force
+$configDestino = Join-Path $Destino "config.json"
+$configOrigen = Join-Path $Origen "config.json"
+if (-not (Test-Path $configDestino) -and (Test-Path $configOrigen)) {
+    Copy-Item -Path $configOrigen -Destination $configDestino
+}
+Set-ConfigConsola $Destino @{ NombreUsuario = $Usuario }
 
 # Scripts que se usarán desde el perfil Consola y para revertir
 $destinoScripts = Join-Path $Destino "scripts"
@@ -71,6 +89,7 @@ Write-Host ""
 Write-Host "Listo. Siguientes pasos:" -ForegroundColor Green
 Write-Host "  1. Reinicia el PC: entrará solo al perfil '$Usuario' (todavía con escritorio normal)."
 Write-Host "  2. En ese perfil abre Steam, inicia sesión y marca 'Recordar contraseña'."
-Write-Host "  3. Ejecuta C:\ConsolaShell\scripts\2-ActivarModoConsola.cmd"
+Write-Host "  3. Vuelve a tu cuenta (Ctrl+Alt+Supr > Cambiar de usuario), abre ConsolaShell.exe y pulsa 'Activar modo consola'"
+Write-Host "     (o, dentro de ese perfil, ejecuta C:\ConsolaShell\scripts\2-ActivarModoConsola.cmd)."
 Write-Host "  4. Reinicia. Desde ahí el PC arranca directo a la pantalla de carga y Big Picture."
 Write-Host ""

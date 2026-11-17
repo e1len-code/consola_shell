@@ -20,6 +20,13 @@ public enum Botones : ushort
     Y         = 0x8000
 }
 
+/// <summary>Batería de un mando según XInput.</summary>
+public readonly record struct BateriaMando(byte Tipo, byte Nivel)
+{
+    public bool ConCable => Tipo == 1;
+    public bool Desconocida => Tipo == 0xFF;
+}
+
 /// <summary>
 /// Lee los 4 puertos XInput y combina sus botones.
 /// XInput funciona aunque la app no tenga el foco, así que el menú de
@@ -28,11 +35,17 @@ public enum Botones : ushort
 public sealed class Gamepad
 {
     private const short UmbralStick = 16000;
+    private readonly bool[] _conectados = new bool[4];
     private Botones _anterior;
     private Botones _actual;
     private bool _xinputDisponible = true;
 
     public bool Conectado { get; private set; }
+
+    /// <summary>Último puerto (0-3) en el que se presionó algo; -1 si ninguno.</summary>
+    public int PuertoActivo { get; private set; } = -1;
+
+    public bool EstaConectado(int puerto) => _conectados[puerto];
 
     public void Actualizar()
     {
@@ -43,17 +56,22 @@ public sealed class Gamepad
 
         for (uint puerto = 0; puerto < 4; puerto++)
         {
+            _conectados[puerto] = false;
             try
             {
                 if (NativeMethods.XInputGetState(puerto, out var estado) != 0) continue;
 
-                Conectado = true;
-                var b = (Botones)estado.Gamepad.wButtons;
+                Conectado = _conectados[puerto] = true;
+                var g = estado.Gamepad;
+                var b = (Botones)g.wButtons;
 
                 // El stick izquierdo también navega como cruceta.
-                if (estado.Gamepad.sThumbLY > UmbralStick) b |= Botones.Arriba;
-                if (estado.Gamepad.sThumbLY < -UmbralStick) b |= Botones.Abajo;
+                if (g.sThumbLY > UmbralStick) b |= Botones.Arriba;
+                if (g.sThumbLY < -UmbralStick) b |= Botones.Abajo;
+                if (g.sThumbLX < -UmbralStick) b |= Botones.Izquierda;
+                if (g.sThumbLX > UmbralStick) b |= Botones.Derecha;
 
+                if (b != Botones.Ninguno) PuertoActivo = (int)puerto;
                 _actual |= b;
             }
             catch (DllNotFoundException)
@@ -63,9 +81,28 @@ public sealed class Gamepad
                 return;
             }
         }
+
+        if (PuertoActivo >= 0 && !_conectados[PuertoActivo])
+            PuertoActivo = Array.IndexOf(_conectados, true);
     }
 
     public bool Presionado(Botones b) => (_actual & b) == b;
 
     public bool RecienPresionado(Botones b) => (_actual & b) == b && (_anterior & b) != b;
+
+    /// <summary>Batería del mando en el puerto; null si no hay mando o XInput no responde.</summary>
+    public static BateriaMando? LeerBateria(int puerto)
+    {
+        try
+        {
+            if (NativeMethods.XInputGetBatteryInformation((uint)puerto, NativeMethods.BATTERY_DEVTYPE_GAMEPAD, out var info) != 0
+                || info.BatteryType == 0)
+                return null;
+            return new BateriaMando(info.BatteryType, info.BatteryLevel);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

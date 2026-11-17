@@ -1,8 +1,10 @@
 {
+  "NombreUsuario": "Consola",
   "NombrePerfil": "Consola",
   "RutaSteam": "",
   "ArgumentosSteam": "-gamepadui",
   "TitulosBigPicture": [ "Big Picture" ],
   "TiempoMaximoCargaSegundos": 90,
-  "SegundosParaMenuEmergencia": 3
+  "SegundosParaMenuEmergencia": 3,
+  "SegundosSinBigPictureParaPanel": 3
 }

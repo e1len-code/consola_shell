@@ -6,6 +6,9 @@ namespace ConsolaShell;
 /// <summary>Configuración leída de config.json (junto al .exe).</summary>
 public sealed class Configuracion
 {
+    /// <summary>Cuenta de Windows del perfil de consola (la cambia "Renombrar" del panel de administración).</summary>
+    public string NombreUsuario { get; set; } = "Consola";
+
     /// <summary>Nombre que se muestra en la pantalla de carga.</summary>
     public string NombrePerfil { get; set; } = "Consola";
 
@@ -24,6 +27,9 @@ public sealed class Configuracion
     /// <summary>Segundos manteniendo Vista + Menú para abrir el menú de emergencia.</summary>
     public int SegundosParaMenuEmergencia { get; set; } = 3;
 
+    /// <summary>Segundos sin ventana de Big Picture para mostrar el Centro de control (al salir de Big Picture).</summary>
+    public int SegundosSinBigPictureParaPanel { get; set; } = 3;
+
     private static readonly JsonSerializerOptions Opciones = new()
     {
         WriteIndented = true,
@@ -32,16 +38,18 @@ public sealed class Configuracion
         AllowTrailingCommas = true
     };
 
-    public static Configuracion Cargar()
+    public static Configuracion Cargar() =>
+        Cargar(Path.Combine(AppContext.BaseDirectory, "config.json"), crearSiFalta: true);
+
+    public static Configuracion Cargar(string ruta, bool crearSiFalta = false)
     {
-        var ruta = Path.Combine(AppContext.BaseDirectory, "config.json");
         try
         {
             if (File.Exists(ruta))
                 return JsonSerializer.Deserialize<Configuracion>(File.ReadAllText(ruta), Opciones) ?? new();
 
             var porDefecto = new Configuracion();
-            try { File.WriteAllText(ruta, JsonSerializer.Serialize(porDefecto, Opciones)); } catch { }
+            if (crearSiFalta) try { porDefecto.Guardar(ruta); } catch { }
             return porDefecto;
         }
         catch (Exception ex)
@@ -50,4 +58,7 @@ public sealed class Configuracion
             return new();
         }
     }
+
+    /// <summary>Guarda en la ruta indicada. Lanza excepción si no se puede escribir (quien llama la muestra).</summary>
+    public void Guardar(string ruta) => File.WriteAllText(ruta, JsonSerializer.Serialize(this, Opciones));
 }
